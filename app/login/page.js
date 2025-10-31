@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { loginUser, registerUser } from "../api/auth";
+import { toast } from "react-toastify";
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,11 +14,36 @@ const Login = () => {
     password: "",
   });
 
-  const handleSubmit = (e) => {
+  const heandleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-    } catch (error) {}
+      if (isLogin) {
+        const res = await loginUser({
+          email: formData.email,
+          password: formData.password,
+        });
+        toast.success(res.message);
+
+        if (res.token) {
+          localStorage.setItem("token", res.token);
+        }
+
+        router.push("/dashboard");
+      } else {
+        const res = await registerUser(formData);
+
+        toast.success(res.message || "Registration Successfull");
+
+        setIsLogin(true);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message);
+    }
   };
 
   return (
@@ -51,6 +78,7 @@ const Login = () => {
                   type="text"
                   autoComplete="name"
                   required={!isLogin}
+                  onChange={heandleChange}
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                   placeholder="Full Name"
                 />
@@ -66,6 +94,7 @@ const Login = () => {
                 type="email"
                 autoComplete="email"
                 required
+                onChange={heandleChange}
                 className={`appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm ${
                   !isLogin ? "" : "rounded-t-md"
                 }`}
@@ -82,6 +111,7 @@ const Login = () => {
                 type="password"
                 autoComplete={isLogin ? "current-password" : "new-password"}
                 required
+                onChange={heandleChange}
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
               />
